@@ -1,0 +1,88 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/internal/auth"
+	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/internal/netrc"
+)
+
+const help = `
+Update your .netrc file to work with Google Cloud Artifact Registry Go Repositories.
+
+Commands:
+
+* refresh, to refresh oauth tokens for Artifact Registry Go endpoints.
+* add-locations, to add new regional Artifact Registry Go endpoints to the netrc file.`
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Println(help)
+	}
+	switch os.Args[1] {
+	case "refresh":
+		refresh()
+	case "add-locations":
+		addLocationFlags := flag.NewFlagSet("add-location", flag.ExitOnError)
+		jsonKey := addLocationFlags.String("json_key", "", "path to the json key of the service account used for this location. Leave empty to use the oauth token instead.")
+		hostPattern := addLocationFlags.String("host_pattern", "%s-go.pkg.dev", "Artifact Registry server host pattern, where %s will be replaced by a location string.")
+		locations := addLocationFlags.String("locations", "", "Required. A list of comma-separated location strings to regional Artifact Registry Go endpoints to the netrc file.")
+		addLocationFlags.Parse(os.Args[2:])
+		addLocations(*locations, *jsonKey, *hostPattern)
+	}
+}
+
+func refresh() {
+	ctx := context.Background()
+	ctx, cf := context.WithTimeout(ctx, 30*time.Second)
+	defer cf()
+
+	p, config, err := netrc.Load()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	token, err := auth.Token(ctx)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	config = netrc.Refresh(config, token)
+	if err := netrc.Save(config, p); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	log.Println("Refresh completed.")
+}
+
+func addLocations(locations, jsonKeyPath, hostPattern string) {
+	if strings.Count(hostPattern, "%s") != 1 {
+		log.Println("-host_pattern must have one and only one %%s in it.")
+	}
+	if locations == "" {
+		log.Println("-locations is required.")
+		return
+	}
+	ll := strings.Split(locations, ",")
+	p, config, err := netrc.Load()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	newCfg, err := netrc.AddConfigs(ll, config, hostPattern, jsonKeyPath)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	if err := netrc.Save(newCfg, p); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	log.Println("Add locations completed.")
+}
