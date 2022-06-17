@@ -67,18 +67,19 @@ func Load() (string, string, error) {
 
 // Save renames existing .netrc file as .netrc-old, and saves netrc as the new contents of the .netrc file.
 func Save(netrc, path string) error {
-	_, err := os.Stat(path + "-old")
-	if err == nil { // delete the old file if Stat didn't fail
-		if err := os.Remove(path + "-old"); err != nil {
-			return fmt.Errorf("cannot delete %sold: %v", path, err)
+	// Best effort to save the current netrc as netrc-old.
+	_, err := os.Stat(path)
+	if err == nil {
+		if _, err := os.Stat(path + "-old"); err == nil { // delete the old file if Stat didn't fail
+			if err := os.Remove(path + "-old"); err != nil {
+				return fmt.Errorf("cannot delete %sold: %v", path, err)
+			}
+		}
+		if err := os.Rename(path, path+"-old"); err != nil {
+			return fmt.Errorf("rename .netrc to .netrc-old: %v", err)
 		}
 	}
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Save: %v", err)
-	}
-	if err := os.Rename(path, path+"-old"); err != nil {
-		return fmt.Errorf("rename .netrc to .netrc-old: %v", err)
-	}
+
 	if err := os.WriteFile(path, []byte(netrc), 0755); err != nil {
 		return fmt.Errorf("write new .netrc: %v", err)
 	}
@@ -109,7 +110,10 @@ func AddConfigs(locations []string, netrc, hostPattern, jsonKeyPath string) (str
 			}
 			cfg = arJsonKeyConfig(h, key)
 		}
-		netrc = netrc + "\n" + cfg
+		if netrc != "" {
+			netrc = netrc + "\n"
+		}
+		netrc = netrc + cfg
 	}
 	return netrc, nil
 }
