@@ -66,7 +66,8 @@ func Load() (string, string, error) {
 
 // Save saves the .netrc file.
 func Save(netrc, path string) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 755)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
+	defer f.Close()
 	if err != nil {
 		return fmt.Errorf("Save: %v", err)
 	}
