@@ -21,7 +21,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 
 	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/internal/auth"
 )
@@ -65,23 +64,15 @@ func Load() (string, string, error) {
 	return netrcPath, string(data), nil
 }
 
-// Save renames existing .netrc file as .netrc-old, and saves netrc as the new contents of the .netrc file.
+// Save saves the .netrc file.
 func Save(netrc, path string) error {
-	// Best effort to save the current netrc as netrc-old.
-	_, err := os.Stat(path)
-	if err == nil {
-		if _, err := os.Stat(path + "-old"); err == nil { // delete the old file if Stat didn't fail
-			if err := os.Remove(path + "-old"); err != nil {
-				return fmt.Errorf("cannot delete %sold: %v", path, err)
-			}
-		}
-		if err := os.Rename(path, path+"-old"); err != nil {
-			return fmt.Errorf("rename .netrc to .netrc-old: %v", err)
-		}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 755)
+	if err != nil {
+		return fmt.Errorf("Save: %v", err)
 	}
 
-	if err := os.WriteFile(path, []byte(netrc), 0755); err != nil {
-		return fmt.Errorf("write new .netrc: %v", err)
+	if _, err := f.WriteString(netrc); err != nil {
+		return fmt.Errorf("Save: %v", err)
 	}
 	return nil
 }
@@ -96,8 +87,13 @@ func Refresh(netrc, token string) string {
 func AddConfigs(locations []string, netrc, hostPattern, jsonKeyPath string) (string, error) {
 	for _, l := range locations {
 		h := fmt.Sprintf(hostPattern, l)
-		if strings.Contains(netrc, l) {
+		match, err := regexp.MatchString("machine "+h+"\n", netrc)
+		if err != nil {
+			return "", fmt.Errorf("Internal: AddConfigs has error: %v", err)
+		}
+		if match {
 			log.Printf("Warning: machine %s is already in the .netrc file, skipping\n", h)
+			continue
 		}
 
 		var cfg string
