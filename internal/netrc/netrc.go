@@ -17,6 +17,7 @@ package netrc
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -53,7 +54,7 @@ func Load() (string, string, error) {
 	}
 
 	netrcPath = path.Join(netrcPath, ".netrc")
-	data, err := os.ReadFile(netrcPath)
+	data, err := ioutil.ReadFile(netrcPath)
 	if os.IsNotExist(err) {
 		//  The .netrc file does not exist; create a new one
 		return netrcPath, "", nil
