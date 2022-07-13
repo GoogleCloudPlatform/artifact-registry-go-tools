@@ -76,7 +76,8 @@ func refresh() {
 
 func addLocations(locations, jsonKeyPath, hostPattern string) {
 	if strings.Count(hostPattern, "%s") != 1 {
-		log.Println("-host_pattern must have one and only one %%s in it.")
+		errMsg := "-host_pattern must have one and only one %%s in it."
+		log.Println(errMsg)
 		return
 	}
 	if locations == "" {
