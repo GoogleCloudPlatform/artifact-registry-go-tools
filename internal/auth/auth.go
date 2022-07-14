@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"os/exec"
 	"runtime"
 
@@ -69,7 +69,7 @@ func Token(ctx context.Context) (string, error) {
 
 // EncodeJsonKey base64 encodes a service account JSON key file.
 func EncodeJsonKey(keyPath string) (string, error) {
-	data, err := os.ReadFile(keyPath)
+	data, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		return "", fmt.Errorf("EncodeJsonKey: %v", err)
 	}
