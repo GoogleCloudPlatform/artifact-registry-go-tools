@@ -2,7 +2,7 @@ package netrc
 
 import (
 	"errors"
-	"io/fs"
+	"os"
 	"testing"
 )
 
@@ -46,7 +46,7 @@ password ewogICAgInRlc3Qta2V5IjogInRlc3QtdmFsdWUiCn0=
 			name:        "json key does not exist",
 			locations:   []string{"us-west1"},
 			jsonKeyPath: "testdata/not-a-key.json",
-			wantErr:     fs.ErrNotExist,
+			wantErr:     os.ErrNotExist,
 		},
 		{
 			name:      "add two locations",
