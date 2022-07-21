@@ -104,7 +104,7 @@ func AddConfigs(locations []string, netrc, hostPattern, jsonKeyPath string) (str
 		} else {
 			key, err := auth.EncodeJsonKey(jsonKeyPath)
 			if err != nil {
-				return "", fmt.Errorf("AddConfigs: %v", err)
+				return "", fmt.Errorf("AddConfigs: %w", err)
 			}
 			cfg = arJsonKeyConfig(h, key)
 		}

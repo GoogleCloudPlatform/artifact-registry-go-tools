@@ -71,7 +71,7 @@ func Token(ctx context.Context) (string, error) {
 func EncodeJsonKey(keyPath string) (string, error) {
 	data, err := ioutil.ReadFile(keyPath)
 	if err != nil {
-		return "", fmt.Errorf("EncodeJsonKey: %v", err)
+		return "", fmt.Errorf("EncodeJsonKey: %w", err)
 	}
 	return base64.StdEncoding.EncodeToString(data), nil
 }
