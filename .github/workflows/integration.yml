@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  flag-parsing-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.15, 1.16, 1.17, 1.18]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: ${{ matrix.go-version }}
+    - run: go run cmd/auth/main.go | grep "Update your .netrc file to work with Google Cloud Artifact Registry Go Repositories."
+    - run: go run cmd/auth/main.go --help | grep "Commands:"
+    - run: go run cmd/auth/main.go bad-command | grep "unknown command %q"

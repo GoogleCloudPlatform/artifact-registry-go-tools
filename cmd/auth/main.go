@@ -37,6 +37,7 @@ Commands:
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println(help)
+		return
 	}
 	switch os.Args[1] {
 	case "refresh":
@@ -48,6 +49,10 @@ func main() {
 		locations := addLocationFlags.String("locations", "", "Required. A list of comma-separated location strings to regional Artifact Registry Go endpoints to the netrc file.")
 		addLocationFlags.Parse(os.Args[2:])
 		addLocations(*locations, *jsonKey, *hostPattern)
+	case "help", "-help", "--help":
+		fmt.Println(help)
+	default:
+		fmt.Printf("unknown command %q. Please rerun the tool with `--help`\n", os.Args[1])
 	}
 }
 
