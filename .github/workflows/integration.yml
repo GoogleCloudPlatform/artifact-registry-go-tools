@@ -1,4 +1,4 @@
-name: CI
+name: Integration Tests
 
 on:
   push:
@@ -20,4 +20,3 @@ jobs:
     - run: go run cmd/auth/main.go | grep "Update your .netrc file to work with Google Cloud Artifact Registry Go Repositories."
     - run: go run cmd/auth/main.go --help | grep "Commands:"
     - run: go run cmd/auth/main.go bad-command | grep 'unknown command "bad-command"'
-    
