@@ -28,7 +28,7 @@ import (
 
 // applicationDefault returns a token of Application Default Credentials.
 func applicationDefault(ctx context.Context) (string, error) {
-	creds, err := google.FindDefaultCredentials(ctx)
+	creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
 		return "", fmt.Errorf("ApplicationDefault: %v", err)
 	}
