@@ -41,12 +41,19 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "refresh":
-		refresh()
+		refreshFlags := flag.NewFlagSet("refresh", flag.ExitOnError)
+		var (
+			token = refreshFlags.String("token", "", "The oauth token to write to the netrc file. Most users should not set this field and let the tool find the credentials to use from the environment.")
+		)
+		refreshFlags.Parse(os.Args[2:])
+		refresh(*token)
 	case "add-locations":
 		addLocationFlags := flag.NewFlagSet("add-location", flag.ExitOnError)
-		jsonKey := addLocationFlags.String("json_key", "", "path to the json key of the service account used for this location. Leave empty to use the oauth token instead.")
-		hostPattern := addLocationFlags.String("host_pattern", "%s-go.pkg.dev", "Artifact Registry server host pattern, where %s will be replaced by a location string.")
-		locations := addLocationFlags.String("locations", "", "Required. A list of comma-separated location strings to regional Artifact Registry Go endpoints to the netrc file.")
+		var (
+			jsonKey     = addLocationFlags.String("json_key", "", "path to the json key of the service account used for this location. Leave empty to use the oauth token instead.")
+			hostPattern = addLocationFlags.String("host_pattern", "%s-go.pkg.dev", "Artifact Registry server host pattern, where %s will be replaced by a location string.")
+			locations   = addLocationFlags.String("locations", "", "Required. A list of comma-separated location strings to regional Artifact Registry Go endpoints to the netrc file.")
+		)
 		addLocationFlags.Parse(os.Args[2:])
 		addLocations(*locations, *jsonKey, *hostPattern)
 	case "help", "-help", "--help":
@@ -56,7 +63,7 @@ func main() {
 	}
 }
 
-func refresh() {
+func refresh(token string) {
 	ctx := context.Background()
 	ctx, cf := context.WithTimeout(ctx, 30*time.Second)
 	defer cf()
@@ -66,10 +73,13 @@ func refresh() {
 		log.Println(err)
 		os.Exit(1)
 	}
-	token, err := auth.Token(ctx)
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+	if token == "" {
+		var err error
+		token, err = auth.Token(ctx)
+		if err != nil {
+			log.Println(err)
+			os.Exit(1)
+		}
 	}
 	config = netrc.Refresh(config, token)
 	if err := netrc.Save(config, p); err != nil {
