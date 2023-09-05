@@ -23,7 +23,7 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/internal/auth"
+	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/pkg/auth"
 )
 
 var arTokenConfigRegexp = regexp.MustCompile("machine (.*go.pkg.dev)\nlogin oauth2accesstoken\npassword (.*)")
