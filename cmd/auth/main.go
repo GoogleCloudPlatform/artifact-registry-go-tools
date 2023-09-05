@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/internal/auth"
-	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/internal/netrc"
+	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/pkg/auth"
+	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/pkg/netrc"
 )
 
 const help = `
