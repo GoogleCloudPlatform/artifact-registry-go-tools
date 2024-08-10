@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/pkg/auth"
 )
@@ -53,7 +54,17 @@ func Load() (string, string, error) {
 		netrcPath = h
 	}
 
-	netrcPath = path.Join(netrcPath, ".netrc")
+	if !strings.HasSuffix(netrcPath, ".netrc") {
+		netrcPath = path.Join(netrcPath, ".netrc")
+	}
+
+	if _, err := os.Stat(path.Dir(netrcPath)); err != nil {
+		if os.IsNotExist(err) {
+			return "", "", fmt.Errorf(".netrc directory does not exist: %w", err)
+		}
+		return "", "", fmt.Errorf("failed to load .netrc directory: %w", err)
+	}
+
 	data, err := ioutil.ReadFile(netrcPath)
 	if os.IsNotExist(err) {
 		//  The .netrc file does not exist; create a new one

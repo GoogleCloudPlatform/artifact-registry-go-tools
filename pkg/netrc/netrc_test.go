@@ -1,8 +1,10 @@
 package netrc
 
 import (
+	_ "embed"
 	"errors"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -221,6 +223,74 @@ password <oauth2accesstoken>`,
 		t.Run(tc.name, func(t *testing.T) {
 			if gotNetrc := Refresh(tc.exsitingNetrc, tc.token); gotNetrc != tc.wantNetrc {
 				t.Errorf("unexpected netrc: got %v, want %v", gotNetrc, tc.wantNetrc)
+			}
+		})
+	}
+}
+
+//go:embed testdata/load_test/has_netrc_file_dir/.netrc
+var hasNetrcFileDirNetrcContent string
+
+func TestLoad(t *testing.T) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("os.Getwd() = %v", err)
+	}
+	testDataDir := path.Join(currentDir, "testdata", "load_test")
+
+	cases := []struct {
+		name             string
+		netrcPath        string
+		wantNetrcPath    string
+		wantNetrcContent string
+		wantErr          error
+	}{
+		{
+			name:             "NETRC env points to existing directory",
+			netrcPath:        path.Join(testDataDir, "empty_dir"),
+			wantNetrcPath:    path.Join(testDataDir, "empty_dir", ".netrc"),
+			wantNetrcContent: "",
+			wantErr:          nil,
+		},
+		{
+			name:             "NETRC env points to non-existent directory",
+			netrcPath:        path.Join(testDataDir, "non_existent_dir"),
+			wantNetrcPath:    "",
+			wantNetrcContent: "",
+			wantErr:          os.ErrNotExist,
+		},
+		{
+			name:             "NETRC env points to existing file",
+			netrcPath:        path.Join(testDataDir, "has_netrc_file_dir", ".netrc"),
+			wantNetrcPath:    path.Join(testDataDir, "has_netrc_file_dir", ".netrc"),
+			wantNetrcContent: hasNetrcFileDirNetrcContent,
+			wantErr:          nil,
+		},
+		{
+			name:             "NETRC env points to non-existent file",
+			netrcPath:        path.Join(testDataDir, "empty_dir", ".netrc"),
+			wantNetrcPath:    path.Join(testDataDir, "empty_dir", ".netrc"),
+			wantNetrcContent: "",
+			wantErr:          nil,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if envErr := os.Setenv("NETRC", tc.netrcPath); envErr != nil {
+				t.Fatalf("os.Setenv() = %v", envErr)
+			}
+
+			gotNetrcPath, gotNetrcContent, gotErr := Load()
+
+			if gotNetrcPath != tc.wantNetrcPath {
+				t.Errorf("unexpected netrc path: got %v, want %v", gotNetrcPath, tc.wantNetrcPath)
+			}
+			if gotNetrcContent != tc.wantNetrcContent {
+				t.Errorf("unexpected netrc content: got %v, want %v", gotNetrcContent, tc.wantNetrcContent)
+			}
+			if !errors.Is(gotErr, tc.wantErr) {
+				t.Errorf("got error %v, want error %v", gotErr, tc.wantErr)
 			}
 		})
 	}
