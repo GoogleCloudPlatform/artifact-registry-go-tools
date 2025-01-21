@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 )
 
@@ -233,10 +233,14 @@ var hasNetrcFileDirNetrcContent string
 
 func TestLoad(t *testing.T) {
 	currentDir, err := os.Getwd()
+	netrcFileName := getNetrcFileName()
+
 	if err != nil {
 		t.Fatalf("os.Getwd() = %v", err)
 	}
-	testDataDir := path.Join(currentDir, "testdata", "load_test")
+	testDataDir := filepath.Join(currentDir, "testdata", "load_test")
+	a := testDataDir
+	_ = a
 
 	cases := []struct {
 		name             string
@@ -247,29 +251,29 @@ func TestLoad(t *testing.T) {
 	}{
 		{
 			name:             "NETRC env points to existing directory",
-			netrcPath:        path.Join(testDataDir, "empty_dir"),
-			wantNetrcPath:    path.Join(testDataDir, "empty_dir", ".netrc"),
+			netrcPath:        filepath.Join(testDataDir, "empty_dir"),
+			wantNetrcPath:    filepath.Join(testDataDir, "empty_dir", netrcFileName),
 			wantNetrcContent: "",
 			wantErr:          nil,
 		},
 		{
 			name:             "NETRC env points to non-existent directory",
-			netrcPath:        path.Join(testDataDir, "non_existent_dir"),
+			netrcPath:        filepath.Join(testDataDir, "non_existent_dir"),
 			wantNetrcPath:    "",
 			wantNetrcContent: "",
 			wantErr:          os.ErrNotExist,
 		},
 		{
 			name:             "NETRC env points to existing file",
-			netrcPath:        path.Join(testDataDir, "has_netrc_file_dir", ".netrc"),
-			wantNetrcPath:    path.Join(testDataDir, "has_netrc_file_dir", ".netrc"),
+			netrcPath:        filepath.Join(testDataDir, "has_netrc_file_dir", netrcFileName),
+			wantNetrcPath:    filepath.Join(testDataDir, "has_netrc_file_dir", netrcFileName),
 			wantNetrcContent: hasNetrcFileDirNetrcContent,
 			wantErr:          nil,
 		},
 		{
 			name:             "NETRC env points to non-existent file",
-			netrcPath:        path.Join(testDataDir, "empty_dir", ".netrc"),
-			wantNetrcPath:    path.Join(testDataDir, "empty_dir", ".netrc"),
+			netrcPath:        filepath.Join(testDataDir, "empty_dir", netrcFileName),
+			wantNetrcPath:    filepath.Join(testDataDir, "empty_dir", netrcFileName),
 			wantNetrcContent: "",
 			wantErr:          nil,
 		},

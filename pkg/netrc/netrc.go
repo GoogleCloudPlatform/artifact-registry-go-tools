@@ -20,8 +20,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/pkg/auth"
@@ -43,6 +44,14 @@ password %s
 `, host, base64key)
 }
 
+func getNetrcFileName() string {
+	// return _netrc for Windows and .netrc for Unix
+	if runtime.GOOS == "windows" {
+		return "_netrc"
+	}
+	return ".netrc"
+}
+
 // Load loads the path and contents of the .netrc file into memory.
 func Load() (string, string, error) {
 	netrcPath := os.Getenv("NETRC")
@@ -54,15 +63,16 @@ func Load() (string, string, error) {
 		netrcPath = h
 	}
 
-	if !strings.HasSuffix(netrcPath, ".netrc") {
-		netrcPath = path.Join(netrcPath, ".netrc")
+	netrcFileName := getNetrcFileName()
+	if !strings.HasSuffix(netrcPath, netrcFileName) {
+		netrcPath = filepath.Join(netrcPath, netrcFileName)
 	}
 
-	if _, err := os.Stat(path.Dir(netrcPath)); err != nil {
+	if _, err := os.Stat(filepath.Dir(netrcPath)); err != nil {
 		if os.IsNotExist(err) {
-			return "", "", fmt.Errorf(".netrc directory does not exist: %w", err)
+			return "", "", fmt.Errorf("%s directory does not exist: %w", netrcFileName, err)
 		}
-		return "", "", fmt.Errorf("failed to load .netrc directory: %w", err)
+		return "", "", fmt.Errorf("failed to load %s directory: %w", netrcFileName, err)
 	}
 
 	data, err := ioutil.ReadFile(netrcPath)
@@ -71,7 +81,7 @@ func Load() (string, string, error) {
 		return netrcPath, "", nil
 	}
 	if err != nil {
-		return "", "", fmt.Errorf("cannot load .netrc file: %v", err)
+		return "", "", fmt.Errorf("cannot load %s file: %v", netrcFileName, err)
 	}
 	return netrcPath, string(data), nil
 }
