@@ -41,7 +41,7 @@ password <oauth2accesstoken>
 			jsonKeyPath: "testdata/key.json",
 			wantNetrc: `machine us-west1-go.pkg.dev
 login _json_key_base64
-password ewogICAgInRlc3Qta2V5IjogInRlc3QtdmFsdWUiCn0=
+password eyJ0ZXN0LWtleSI6ICJ0ZXN0LXZhbHVlIn0=
 `,
 		},
 		{
