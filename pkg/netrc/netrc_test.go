@@ -239,8 +239,6 @@ func TestLoad(t *testing.T) {
 		t.Fatalf("os.Getwd() = %v", err)
 	}
 	testDataDir := filepath.Join(currentDir, "testdata", "load_test")
-	a := testDataDir
-	_ = a
 
 	cases := []struct {
 		name             string
