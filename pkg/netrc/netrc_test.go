@@ -233,11 +233,12 @@ var hasNetrcFileDirNetrcContent string
 
 func TestLoad(t *testing.T) {
 	currentDir, err := os.Getwd()
-	netrcFileName := getNetrcFileName()
-
 	if err != nil {
 		t.Fatalf("os.Getwd() = %v", err)
 	}
+
+	netrcFileName := getNetrcFileName()
+
 	testDataDir := filepath.Join(currentDir, "testdata", "load_test")
 
 	cases := []struct {
