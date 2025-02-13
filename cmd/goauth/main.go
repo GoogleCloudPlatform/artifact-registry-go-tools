@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/artifact-registry-go-tools/pkg/auth"
@@ -46,6 +47,10 @@ func main() {
 	if location == "" {
 		fmt.Println(help)
 		return
+	}
+	if strings.HasPrefix(location, "https://") {
+		log.Println("Location has to be a Google Cloud region, e.g. 'us-central1'.")
+		os.Exit(2)
 	}
 
 	err := handleLocation(location, *jsonKey, *hostPattern)
