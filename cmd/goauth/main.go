@@ -37,9 +37,11 @@ To support multiple locations, add the command multiple times to the GOAUTH vari
 
 For more details, see https://pkg.go.dev/cmd/go@master#hdr-GOAUTH_environment_variable`
 
+const defaultHostPattern = "%s-go.pkg.dev"
+
 func main() {
 	jsonKey := flag.String("json_key", "", "path to the json key of the service account used for this location. Leave empty to use the oauth token instead.")
-	hostPattern := flag.String("host_pattern", "%s-go.pkg.dev", "Artifact Registry server host pattern, where %s will be replaced by a location string.")
+	hostPattern := flag.String("host_pattern", defaultHostPattern, "Artifact Registry server host pattern, where %s will be replaced by a location string.")
 
 	flag.Parse()
 
@@ -53,42 +55,44 @@ func main() {
 		os.Exit(2)
 	}
 
-	err := handleLocation(location, *jsonKey, *hostPattern)
+	// generate the authentication header
+	urlLine := locationURL(location, *hostPattern)
+	authHeader, err := keyAuthHeader(*jsonKey)
 	if err != nil {
 		log.Println(err)
-		os.Exit(1)
+		os.Exit(3)
 	}
+
+	// send the Go authentication information
+	fmt.Printf("%s\n\nAuthorization: %s\n\n", urlLine, authHeader)
 }
 
-func handleLocation(location string, jsonKeyPath string, hostPattern string) error {
+func locationURL(location string, hostPattern string) string {
+	host := fmt.Sprintf(hostPattern, location)
+
+	return fmt.Sprintf("https://%s", host)
+}
+
+func keyAuthHeader(jsonKeyPath string) (string, error) {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	host := fmt.Sprintf(hostPattern, location)
-	url := fmt.Sprintf("https://%s", host)
-	var authorization string
-
 	if jsonKeyPath != "" {
 		key, err := auth.EncodeJsonKey(jsonKeyPath)
 		if err != nil {
-			return fmt.Errorf("failed to encode JSON key: %w", err)
+			return "", fmt.Errorf("failed to encode JSON key: %w", err)
 		}
 
-		authorization = basicAuthHeader("_json_key_base64", key)
+		return basicAuthHeader("_json_key_base64", key), nil
 	} else {
 		token, err := auth.Token(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to get oauth token: %w", err)
+			return "", fmt.Errorf("failed to get oauth token: %w", err)
 		}
 
-		authorization = basicAuthHeader("oauth2accesstoken", token)
+		return basicAuthHeader("oauth2accesstoken", token), nil
 	}
-
-	// send the Go authentication information
-	fmt.Printf("%s\n\nAuthorization: %s\n\n", url, authorization)
-
-	return nil
 }
 
 func basicAuthHeader(username, password string) string {
