@@ -45,7 +45,7 @@ func main() {
 
 	location := flag.Arg(0)
 	if location == "" {
-		fmt.Println(help)
+		fmt.Fprintln(os.Stderr, help)
 		return
 	}
 	if strings.HasPrefix(location, "https://") {
