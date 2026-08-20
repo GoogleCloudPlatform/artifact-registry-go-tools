@@ -1,6 +1,7 @@
 name: Integration Tests
 
-permissions: read-all
+permissions:
+  contents: read
 
 on:
   push:
